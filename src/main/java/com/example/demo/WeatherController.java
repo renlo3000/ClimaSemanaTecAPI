@@ -23,7 +23,7 @@ public class WeatherController {
     private final ObjectMapper objectMapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    // ---------- GET /weather?latitude=...&longitude=... ----------
+
     @GetMapping
     public String getByLatLon(@RequestParam String latitude, @RequestParam String longitude) {
         String url = UriComponentsBuilder.fromHttpUrl(WEATHER_API)
@@ -37,13 +37,10 @@ public class WeatherController {
         return (result != null) ? result : "Error: Unable to fetch weather data.";
     }
 
-    // ---------- GET /weather/by-city?city=Tokyo,JP ----------
-    // Acepta formatos:
-    //   City,Country (Paris,FR) | City,State,Country (New York,NY,US) | City,MX (Chihuahua,MX)
     @GetMapping("/by-city")
     public ResponseEntity<String> getByCity(@RequestParam String city) {
         try {
-            // 1) Geo API → ciudad a lat/lon (limit=1)
+
             String geoUrl = UriComponentsBuilder.fromHttpUrl(GEO_API)
                     .queryParam("q", city)
                     .queryParam("limit", 1)
@@ -57,7 +54,7 @@ public class WeatherController {
 
             GeoResponse[] places = objectMapper.readValue(geoJson, GeoResponse[].class);
 
-            // 2) Si el Geo API no encontró nada, usa Weather por nombre (fallback)
+
             if (places.length == 0) {
                 String weatherByNameUrl = UriComponentsBuilder.fromHttpUrl(WEATHER_API)
                         .queryParam("q", city)
@@ -72,7 +69,6 @@ public class WeatherController {
                         .body("Error: City not found in geocoding API and fallback also failed for: " + city);
             }
 
-            // 3) Weather API con lat/lon del Geo API
             double lat = places[0].lat;
             double lon = places[0].lon;
 
@@ -94,7 +90,6 @@ public class WeatherController {
         }
     }
 
-    // POJO del Geo API (ignorando campos extra como local_names)
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class GeoResponse {
         public String name;
